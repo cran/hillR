@@ -4,11 +4,17 @@
 \alias{hill_taxa_parti}
 \title{Decompostion of Taxonomic diversity through Hill Numbers}
 \usage{
-hill_taxa_parti(comm, q = 0, base = exp(1), rel_then_pool = TRUE,
-  show.warning = TRUE)
+hill_taxa_parti(
+  comm,
+  q = 0,
+  base = exp(1),
+  rel_then_pool = TRUE,
+  show_warning = TRUE,
+  check_data = TRUE
+)
 }
 \arguments{
-\item{comm}{A data frame of vegtation data. Sites as rows, species as columns.}
+\item{comm}{A data frame of vegetation data. Sites as rows, species as columns.}
 
 \item{q}{Hill number, \code{q} = 0 (default) to get species richness,
 \code{q} = 1 to get shannon entropy, \code{q} = 2 will give inverse Simpson.}
@@ -19,12 +25,14 @@ hill_taxa_parti(comm, q = 0, base = exp(1), rel_then_pool = TRUE,
 then pooled into one assemblage. If \code{FALSE}, sites are pooled first, then change abundance of species
 to relative abundance.}
 
-\item{show.warning}{whether to print warning, default is \code{TRUE}.}
+\item{show_warning}{whether to print warning, default is \code{TRUE}.}
+
+\item{check_data}{whether to check data first? Default is \code{TRUE}.}
 }
 \value{
-A data frame with one row (across all sites), including these columns: q, gamma diversity, alpha diveristy,
-beta diversity, MacArthur's homogeneity measure, local similarity (species overlap),
-and region similarity (species overlap).
+A data frame with one row (across all sites), including these columns: q, gamma diversity, alpha diverisity,
+beta diversity, MacArthur's homogeneity measure, local similarity (species overlap, similar to Sorensen),
+and region similarity (species overlap, similar to Jaccard).
 See Chao, Chiu and Jost 2014 Table 2 for more information.
 }
 \description{

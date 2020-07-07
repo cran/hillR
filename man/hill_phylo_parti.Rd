@@ -4,11 +4,19 @@
 \alias{hill_phylo_parti}
 \title{Phylogenetic diversity of multiple sites}
 \usage{
-hill_phylo_parti(comm, tree, q = 0, base = exp(1),
-  rel_then_pool = TRUE, show.warning = TRUE)
+hill_phylo_parti(
+  comm,
+  tree,
+  q = 0,
+  base = exp(1),
+  rel_then_pool = TRUE,
+  show_warning = TRUE,
+  phy_abund = NULL,
+  check_data = TRUE
+)
 }
 \arguments{
-\item{comm}{A data frame of vegtation data. Sites as rows, species as columns.}
+\item{comm}{A data frame of vegetation data. Sites as rows, species as columns.}
 
 \item{tree}{a phylogeny with class 'phylo'.}
 
@@ -21,11 +29,17 @@ hill_phylo_parti(comm, tree, q = 0, base = exp(1),
 then pooled into one assemblage. If \code{FALSE}, sites are pooled first, then change abundance of species
 to relative abundance.}
 
-\item{show.warning}{whether to print warning, default is \code{TRUE}.}
+\item{show_warning}{whether to print warning, default is \code{TRUE}.}
+
+\item{phy_abund}{A matrix of phylogeny node and tips by community matrix derived
+from `dat_prep_phylo()`. Can be specified to speed up `hill_phylo_parti_pairwise()`.}
+
+\item{check_data}{Whether to check the community data and phylogeny. Default is `TRUE`.
+Can be set to `FALSE` to speed up `hill_phylo_parti_pairwise()`.}
 }
 \value{
-A data frame with one row (across all sites) and six columns: q, gamma diversity, alpha diveristy,
-beta diversity, local similarity, and region similarity.
+A data frame with one row (across all sites) and six columns: q, gamma diversity, alpha diversity,
+beta diversity, local similarity (similar to Sorensen), and region similarity (similar to Jaccard).
 }
 \description{
 Calculate overall phylogenetic diversity and site similarity across multiple sites.

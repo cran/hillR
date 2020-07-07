@@ -4,11 +4,19 @@
 \alias{hill_taxa_parti_pairwise}
 \title{Pairwise comparisons for all sites}
 \usage{
-hill_taxa_parti_pairwise(comm, q = 0, rel_then_pool = TRUE,
-  output = c("data.frame", "matrix"), pairs = c("unique", "full"), ...)
+hill_taxa_parti_pairwise(
+  comm,
+  q = 0,
+  rel_then_pool = TRUE,
+  output = c("data.frame", "matrix"),
+  pairs = c("unique", "full"),
+  .progress = TRUE,
+  show_warning = TRUE,
+  ...
+)
 }
 \arguments{
-\item{comm}{A data frame of vegtation data. Sites as rows, species as columns.}
+\item{comm}{A data frame of vegetation data. Sites as rows, species as columns.}
 
 \item{q}{Hill number, \code{q} = 0 (default) to get species richness,
 \code{q} = 1 to get shannon entropy, \code{q} = 2 will give inverse Simpson.}
@@ -20,6 +28,10 @@ to relative abundance.}
 \item{output}{output type: data.frame (default) or matrix. If matrix, then this function will return a list of matrices.}
 
 \item{pairs}{full or unique (default). Do you want to compare all possible pairs (i.e. n^2) or just unique pairs (i.e. \code{choose(n, 2))}?}
+
+\item{.progress}{Whether to show progress bar. Default is `TRUE`.}
+
+\item{show_warning}{whether to print warning, default is \code{TRUE}.}
 
 \item{...}{other arguments in \code{hill_taxa_parti()}.}
 }

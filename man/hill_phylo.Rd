@@ -4,11 +4,17 @@
 \alias{hill_phylo}
 \title{Phylogenetic diversity through Hill Numbers}
 \usage{
-hill_phylo(comm, tree, q = 0, base = exp(1), rel_then_pool = TRUE,
-  show.warning = TRUE)
+hill_phylo(
+  comm,
+  tree,
+  q = 0,
+  base = exp(1),
+  rel_then_pool = TRUE,
+  show_warning = TRUE
+)
 }
 \arguments{
-\item{comm}{A data frame of vegtation data. Sites as rows, species as columns.}
+\item{comm}{A data frame of vegetation data. Sites as rows, species as columns.}
 
 \item{tree}{a phylogeny with class 'phylo'.}
 
@@ -21,10 +27,10 @@ hill_phylo(comm, tree, q = 0, base = exp(1), rel_then_pool = TRUE,
 then pooled into one assemblage. If \code{FALSE}, sites are pooled first, then change abundance of species
 to relative abundance.}
 
-\item{show.warning}{whether to print warning, default is \code{TRUE}.}
+\item{show_warning}{whether to print warning, default is \code{TRUE}.}
 }
 \value{
-A vector of hill number based phylogenetic diversity for all sites.
+A vector of hill number based phylogenetic diversity (`PD(T)`, effective total branch length) for all sites.
 }
 \description{
 Calculate alpha phylogenetic diversity based on Hill numbers
@@ -42,5 +48,5 @@ hill_phylo(comm, tree, q = 2)
 Chao, Anne, Chun-Huo Chiu, and Lou Jost. Unifying Species Diversity, Phylogenetic Diversity, Functional Diversity, and Related Similarity and Differentiation Measures Through Hill Numbers. Annual Review of Ecology, Evolution, and Systematics 45, no. 1 (2014): 297–324. <doi:10.1146/annurev-ecolsys-120213-091540>.
 }
 \author{
-Chiu & Chao
+Chiu & Chao & Daijiang Li
 }

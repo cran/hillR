@@ -1,28 +1,23 @@
 #' code for hill_phylo and hill_phylo_parti are mostly from Chiu & Chao.
 #'
-#' @param comm data frame of vegtation data. Sites as rows, species as columns.
+#' @param comm data frame of vegetation data. Sites as rows, species as columns.
 #' @param tree a phylogeny with class 'phylo'.
-#' @author Chiu & Chao
 #' @noRd
 dat_prep_phylo <- function(comm, tree) {
-    if (class(tree) == "phylo")
-        tree <- ape::write.tree(tree)
-    phyloData <- ade4::newick2phylog(tree)
-    comm <- as.matrix(comm[, names(phyloData$leaves)])  # resort sp
-    nodenames <- c(names(phyloData$leaves), names(phyloData$nodes))
+    if(is.null(tree$edge.length))
+        stop("tree must have branch length")
+    node_tips <- lapply(tree$edge[, 2], function(nd) geiger::tips(tree, nd))
+    n_node = ape::Nnode(tree, internal = FALSE)
+    xn = tree$edge[, 2] # put tip and node names there
+    xn[xn < min(tree$edge[,1])] = tree$tip.label
 
-    M <- matrix(0, nrow = ncol(comm), ncol = length(nodenames), dimnames = list(names(phyloData$leaves),
-        nodenames))
-
-    for (i in 1:nrow(M)) {
-        M[i, ][unlist(phyloData$paths[i])] <- 1
+    M2 <- matrix(0, nrow = ncol(comm), ncol = n_node - 1, # no root needed
+                 dimnames = list(tree$tip.label, xn))
+    for (i in 1:ncol(M2)) {
+        M2[, i][unlist(node_tips[[i]])] = 1
     }
 
-    phylo_comm <- comm %*% M
-    phyloLength <- c(phyloData$leaves, phyloData$nodes)
-    treeH <- sum(phyloLength * phylo_comm[1, ]/sum(comm[1, ]))
-
-    return(list(pcomm = t(phylo_comm), pLength = phyloLength, treeH = treeH))
+    t(comm %*% M2)
 }
 
 #' Phylogenetic diversity through Hill Numbers
@@ -32,8 +27,8 @@ dat_prep_phylo <- function(comm, tree) {
 #' @inheritParams hill_taxa
 #' @param tree a phylogeny with class 'phylo'.
 #' @inheritParams hill_taxa_parti
-#' @author Chiu & Chao
-#' @return A vector of hill number based phylogenetic diversity for all sites.
+#' @author Chiu & Chao & Daijiang Li
+#' @return A vector of hill number based phylogenetic diversity (`PD(T)`, effective total branch length) for all sites.
 #' @export
 #' @references Chao, Anne, Chun-Huo Chiu, and Lou Jost. Unifying Species Diversity, Phylogenetic Diversity, Functional Diversity, and Related Similarity and Differentiation Measures Through Hill Numbers. Annual Review of Ecology, Evolution, and Systematics 45, no. 1 (2014): 297–324. <doi:10.1146/annurev-ecolsys-120213-091540>.
 #' @examples
@@ -44,10 +39,10 @@ dat_prep_phylo <- function(comm, tree) {
 #' hill_phylo(comm, tree, q = 1)
 #' hill_phylo(comm, tree, q = 2)
 #'
-hill_phylo <- function(comm, tree, q = 0, base = exp(1), rel_then_pool = TRUE, show.warning = TRUE) {
+hill_phylo <- function(comm, tree, q = 0, base = exp(1), rel_then_pool = TRUE, show_warning = TRUE) {
     if (any(comm < 0))
         stop("Negative value in comm data")
-    # if(any(colSums(comm) == 0) & show.warning) warning('Some species in comm data were
+    # if(any(colSums(comm) == 0) & show_warning) warning('Some species in comm data were
     # not observed in any site,\n delete them...') comm = comm[, colSums(comm) != 0]
 
     comm_sp <- intersect(colnames(comm), tree$tip.label)
@@ -55,13 +50,13 @@ hill_phylo <- function(comm, tree, q = 0, base = exp(1), rel_then_pool = TRUE, s
     if (class(tree) != "phylo")
         stop("tree must be an object with phylo as class")
     if (length(setdiff(tree$tip.label, comm_sp))) {
-        if (show.warning)
+        if (show_warning)
             warning("Some species in the phylogeny but not in comm, \n remove them from the phylogeny...")
-        tree <- ape::drop.tip(tree, tree$tip.label[!tree$tip.label %in% comm_sp])
+        tree <- ape::keep.tip(tree, comm_sp)
     }
 
     if (length(setdiff(colnames(comm), comm_sp))) {
-        if (show.warning)
+        if (show_warning)
             warning("Some species in the comm but not in the phylogeny, \n remove them from the comm")
         comm <- comm[, comm_sp]
     }
@@ -73,25 +68,17 @@ hill_phylo <- function(comm, tree, q = 0, base = exp(1), rel_then_pool = TRUE, s
         comm <- sweep(comm, 1, rowSums(comm, na.rm = TRUE), "/")  # relative abun
     }
 
-    dat <- dat_prep_phylo(comm, tree)
-    pabun <- dat$pcomm
-    plength <- dat$pLength
-
+    pabun <- dat_prep_phylo(comm, tree)
+    plength <- tree$edge.length
     N <- ncol(pabun)
     PD <- numeric(N)
     names(PD) <- row.names(comm)
-
-    if (q == 1) {
-        for (i in 1:N) {
-            TT <- sum(pabun[, i] * plength)
-            I <- which(pabun[, i] > 0)
-            PD[i] <- exp(-sum(plength[I] * (pabun[, i][I]/TT) * log(pabun[, i][I]/TT,
-                base)))
-        }
-    } else {
-        for (i in 1:N) {
-            TT <- sum(pabun[, i] * plength)
-            I <- which(pabun[, i] > 0)
+    for (i in 1:N) {
+        TT <- sum(pabun[, i] * plength)
+        I <- which(pabun[, i] > 0)
+        if(q == 1){
+            PD[i] <- exp(-sum(plength[I] * (pabun[, i][I]/TT) * log(pabun[, i][I]/TT, base)))
+        } else {
             PD[i] <- sum(plength[I] * (pabun[, i][I]/TT)^q)^(1/(1 - q))
         }
     }

@@ -4,11 +4,20 @@
 \alias{hill_phylo_parti_pairwise}
 \title{Pairwise phylogenetic diversity through Hill numbers}
 \usage{
-hill_phylo_parti_pairwise(comm, tree, q = 0, output = c("data.frame",
-  "matrix"), pairs = c("unique", "full"), ...)
+hill_phylo_parti_pairwise(
+  comm,
+  tree,
+  q = 0,
+  output = c("data.frame", "matrix"),
+  pairs = c("unique", "full"),
+  rel_then_pool = TRUE,
+  .progress = TRUE,
+  show_warning = TRUE,
+  ...
+)
 }
 \arguments{
-\item{comm}{A data frame of vegtation data. Sites as rows, species as columns.}
+\item{comm}{A data frame of vegetation data. Sites as rows, species as columns.}
 
 \item{tree}{a phylogeny with class 'phylo'.}
 
@@ -18,6 +27,14 @@ hill_phylo_parti_pairwise(comm, tree, q = 0, output = c("data.frame",
 \item{output}{output type: data.frame (default) or matrix. If matrix, then this function will return a list of matrices.}
 
 \item{pairs}{full or unique (default). Do you want to compare all possible pairs (i.e. n^2) or just unique pairs (i.e. \code{choose(n, 2))}?}
+
+\item{rel_then_pool}{default is \code{TRUE.} Abundance of species are first changed to relative abundance within sites,
+then pooled into one assemblage. If \code{FALSE}, sites are pooled first, then change abundance of species
+to relative abundance.}
+
+\item{.progress}{Whether to show progress bar. Default is `TRUE`.}
+
+\item{show_warning}{whether to print warning, default is \code{TRUE}.}
 
 \item{...}{additional arguments for \code{hill_func_parti}.}
 }
@@ -31,10 +48,10 @@ Calculate pairwise phylogenetic diversity.
 \dontrun{
 comm = dummy = FD::dummy$abun
 tree = ape::rtree(n = ncol(comm), tip.label = paste0('sp', 1:8))
-hill_phylo_parti_pairwise(comm, tree, q = 0, show.warning = FALSE)
-hill_phylo_parti_pairwise(comm, tree, q = 0.999, show.warning = FALSE)
-hill_phylo_parti_pairwise(comm, tree, q = 1, show.warning = FALSE)
-hill_phylo_parti_pairwise(comm, tree, q = 2, show.warning = FALSE)
+hill_phylo_parti_pairwise(comm, tree, q = 0, show_warning = FALSE)
+hill_phylo_parti_pairwise(comm, tree, q = 0.999, show_warning = FALSE)
+hill_phylo_parti_pairwise(comm, tree, q = 1, show_warning = FALSE)
+hill_phylo_parti_pairwise(comm, tree, q = 2, show_warning = FALSE)
 }
 }
 \references{

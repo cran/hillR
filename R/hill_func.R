@@ -8,7 +8,7 @@
 #' matrix using `FD::gowdis(traits)`. If all traits are numeric, then it will use Euclidean distance.
 #' @param traits_as_is if \code{FALSE} (default) traits data frame will be transformed into a distance
 #' matrix. Otherwise, will use as is (i.e. traits is a symmetric distance matrix).
-#' @param checkdata whether to check data first? Default is \code{TRUE}.
+#' @param check_data whether to check data first? Default is \code{TRUE}.
 #' @param div_by_sp as FD calculated in this way will be highly correlated with taxonomic diversity,
 #' one potential simple way to correct this is to divide the results by the number of species.
 #' However, a more common way to deal with correlations is to use null models and calculate standardized effect sizes.
@@ -21,7 +21,7 @@
 #'
 #' Chiu, Chun-Huo, and Anne Chao. Distance-Based Functional Diversity Measures and Their Decomposition: A Framework Based on Hill Numbers. PLoS ONE 9, no. 7 (July 7, 2014): e100014. <doi:10.1371/journal.pone.0100014>.
 #' @return A matrix, with these information for each site: Q (Rao's Q); D_q (functional hill number,
-#'  the effective number of equally abundant and functionally equally distince species);
+#'  the effective number of equally abundant and functionally equally distinct species);
 #'  MD_q (mean functional diversity per species, the effective sum of pairwise distances between
 #'  a fixed species and all other species); FD_q (total functional diversity, the effective total functional
 #'  distance between species of the assemblage). See Chiu and Chao 2014 page 4 for more information.
@@ -34,36 +34,41 @@
 #' hill_func(comm = dummy$abun, traits = dummy$trait, q = 2)
 #' hill_func(comm = dummy$abun, traits = dummy$trait, q = 3)
 #'
-hill_func <- function(comm, traits, traits_as_is = FALSE, q = 0, base = exp(1), checkdata = TRUE,
+hill_func <- function(comm, traits, traits_as_is = FALSE, q = 0, base = exp(1), check_data = TRUE,
                       div_by_sp = FALSE, ord = c("podani", "metric"), fdis = TRUE, stand_dij = FALSE) {
-    if (checkdata) {
+    if (check_data) {
         if (any(comm < 0))
             stop("Negative value in comm data")
-        if (is.null(rownames(traits))) {
-            stop("\n Traits have no row names\n")
+        if(traits_as_is){
+            if(is.null(attributes(traits)$Labels)) stop("\n Traits distance matrix has no labels\n")
+        } else {
+            if (is.null(rownames(traits))) stop("\n Traits have no row names\n")
         }
         if (is.null(colnames(comm))) {
             stop("\n Comm data have no col names\n")
         }
     }
 
-    if (any(!colnames(comm) %in% rownames(traits))) {
-        warning("\n There are species from community data that are not on traits matrix\nDelete these species from comm data...\n")
-        comm <- comm[, colnames(comm) %in% rownames(traits)]
+    if(traits_as_is){
+        trait_sp = attributes(traits)$Labels
+    } else {
+        trait_sp = rownames(traits)
+    }
+    if (any(!colnames(comm) %in% trait_sp)) {
+        warning("\n There are species from community data that are not on traits matrix\n
+                Delete these species from comm data...\n")
+        comm <- comm[, trait_sp]
     }
 
     # all(rownames(traits) == names(comm))
 
     if (traits_as_is) {
         # traits is already a distance matrix
-        dij <- as.matrix(traits)
+        dij <- traits
+        if(!inherits(dij, "dist")) stop("`traits` is not a distance object yet `trait_as_is` is TRUE\n")
     } else {
         # traits is not a distance matrix
-        traits <- as.data.frame(traits)
-        traits$sp <- sp <- rownames(traits)  # R CMD CHECK complain about no global var. sp
-        traits <- plyr::arrange(traits[traits$sp %in% colnames(comm), ], sp)
-        rownames(traits) <- traits$sp
-        traits$sp <- NULL
+        traits <- traits[trait_sp, ]
 
         if (ncol(traits) == 1) {
             # only 1 trait
@@ -100,17 +105,12 @@ hill_func <- function(comm, traits, traits_as_is = FALSE, q = 0, base = exp(1), 
                 }
             }
             if (all(sapply(traits, is.numeric)) & all(!is.na(traits))) {
-                dij <- dist(apply(traits, 2, scale, center = TRUE, scale = TRUE))
+                dij <- dist(scale(traits, center = TRUE, scale = TRUE))
             } else {
                 ord <- match.arg(ord)
                 dij <- FD::gowdis(x = traits, asym.bin = NULL, ord = ord)
             }
             # dij = gowdis(x=traits, ...)
-        }
-
-        if (fdis) {
-            # calculate fdis
-            FDis <- FD::fdisp(d = dij, a = as.matrix(comm))$FDis
         }
 
         # if (!is.euclid(dij)) { if (corr == 'lingoes') { dij2 <- lingoes(dij)
@@ -125,6 +125,11 @@ hill_func <- function(comm, traits, traits_as_is = FALSE, q = 0, base = exp(1), 
         # <- quasieuclid(dij) warning('Species x species distance was not Euclidean, but no
         # correction was applied. Only the PCoA axes with positive eigenvalues were
         # kept.','\n') } dij = dij2 }
+    }
+
+    if (fdis) {
+        # calculate fdis
+        FDis <- FD::fdisp(d = dij, a = as.matrix(comm))$FDis
     }
 
     comm <- as.matrix(comm)

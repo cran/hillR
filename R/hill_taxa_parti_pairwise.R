@@ -8,6 +8,7 @@
 #' @inheritParams hill_taxa_parti
 #' @param output output type: data.frame (default) or matrix. If matrix, then this function will return a list of matrices.
 #' @param pairs full or unique (default). Do you want to compare all possible pairs (i.e. n^2) or just unique pairs (i.e. \code{choose(n, 2))}?
+#' @param .progress Whether to show progress bar. Default is `TRUE`.
 #' @param ... other arguments in \code{hill_taxa_parti()}.
 #' @export
 #' @return A data frame with results for all pairwise comparisons.
@@ -27,17 +28,28 @@
 #' hill_taxa_parti_pairwise(comm = dummy$abun, q = 2)
 #' hill_taxa_parti_pairwise(comm = dummy$abun, q = 3)
 #' }
-hill_taxa_parti_pairwise <- function(comm, q = 0, rel_then_pool = TRUE, output = c("data.frame",
-    "matrix"), pairs = c("unique", "full"), ...) {
+hill_taxa_parti_pairwise <- function(comm, q = 0, rel_then_pool = TRUE,
+                                     output = c("data.frame", "matrix"),
+                                     pairs = c("unique", "full"),
+                                     .progress = TRUE,
+                                     show_warning = TRUE, ...) {
+    if (any(comm < 0))
+        stop("Negative value in comm data")
+    if (any(colSums(comm) == 0) & show_warning)
+        warning("Some species in comm data were not observed in any site,\n delete them...")
+
     output <- match.arg(output)
     pairs <- match.arg(pairs)
     nsite <- nrow(comm)
     temp <- matrix(1, nsite, nsite)
     dimnames(temp) <- list(row.names(comm), row.names(comm))
     gamma_pair <- alpha_pair <- beta_pair <- local_simi <- region_simi <- temp
-    for (i in 1:nsite) {
-        for (j in i:nsite) {
-            o <- hill_taxa_parti(comm[c(i, j), ], q = q, ...)
+    if(.progress)
+        progbar = utils::txtProgressBar(min = 0, max = nsite - 1, initial = 0, style = 3)
+    for (i in 1:(nsite - 1)) {
+        if(.progress) utils::setTxtProgressBar(progbar, i)
+        for (j in (i + 1):nsite) {
+            o <- hill_taxa_parti(comm[c(i, j), ], q = q, check_data = FALSE, ...)
             gamma_pair[i, j] <- o$TD_gamma
             gamma_pair[j, i] <- o$TD_gamma
             alpha_pair[i, j] <- o$TD_alpha
@@ -50,6 +62,7 @@ hill_taxa_parti_pairwise <- function(comm, q = 0, rel_then_pool = TRUE, output =
             region_simi[j, i] <- o$region_similarity
         }
     }
+    if(.progress) close(progbar)
 
     if (pairs == "full") {
         if (output == "matrix") {
@@ -60,12 +73,14 @@ hill_taxa_parti_pairwise <- function(comm, q = 0, rel_then_pool = TRUE, output =
         if (output == "data.frame") {
             site.comp <- as.matrix(expand.grid(row.names(comm), row.names(comm)))
             out <- plyr::adply(site.comp, 1, function(x) {
-                data.frame(q = q, site1 = x[1], site2 = x[2], TD_gamma = gamma_pair[x[1],
-                  x[2]], TD_alpha = alpha_pair[x[1], x[2]], TD_beta = beta_pair[x[1],
-                  x[2]], local_similarity = local_simi[x[1], x[2]], region_similarity = region_simi[x[1],
-                  x[2]])
+                data.frame(q = q, site1 = x[1], site2 = x[2],
+                           TD_gamma = gamma_pair[x[1], x[2]],
+                           TD_alpha = alpha_pair[x[1], x[2]],
+                           TD_beta = beta_pair[x[1], x[2]],
+                           local_similarity = local_simi[x[1], x[2]],
+                           region_similarity = region_simi[x[1], x[2]])
             })[, -1]  # get rid of X1 column
-            out <- tibble::as.tibble(out)
+            out <- tibble::as_tibble(out)
         }
     }
 
@@ -84,14 +99,16 @@ hill_taxa_parti_pairwise <- function(comm, q = 0, rel_then_pool = TRUE, output =
         if (output == "data.frame") {
             site.comp <- as.matrix(expand.grid(row.names(comm), row.names(comm)))
             out <- plyr::adply(site.comp, 1, function(x) {
-                data.frame(q = q, site1 = x[1], site2 = x[2], TD_gamma = gamma_pair[x[1],
-                  x[2]], TD_alpha = alpha_pair[x[1], x[2]], TD_beta = beta_pair[x[1],
-                  x[2]], local_similarity = local_simi[x[1], x[2]], region_similarity = region_simi[x[1],
-                  x[2]])
+                data.frame(q = q, site1 = x[1], site2 = x[2],
+                           TD_gamma = gamma_pair[x[1], x[2]],
+                           TD_alpha = alpha_pair[x[1], x[2]],
+                           TD_beta = beta_pair[x[1], x[2]],
+                           local_similarity = local_simi[x[1], x[2]],
+                           region_similarity = region_simi[x[1], x[2]])
             })
             out <- na.omit(out)[, -1]
             row.names(out) <- NULL
-            out <- tibble::as.tibble(out)
+            out <- tibble::as_tibble(out)
         }
     }
     out

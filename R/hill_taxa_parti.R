@@ -6,14 +6,15 @@
 #' alpha is the average diversity across all site, beta is across all communities.
 #'
 #' @inheritParams hill_taxa
+#' @inheritParams hill_func
 #' @param rel_then_pool default is \code{TRUE.} Abundance of species are first changed to relative abundance within sites,
 #' then pooled into one assemblage. If \code{FALSE}, sites are pooled first, then change abundance of species
 #' to relative abundance.
-#' @param show.warning whether to print warning, default is \code{TRUE}.
+#' @param show_warning whether to print warning, default is \code{TRUE}.
 #' @export
-#' @return A data frame with one row (across all sites), including these columns: q, gamma diversity, alpha diveristy,
-#' beta diversity, MacArthur's homogeneity measure, local similarity (species overlap),
-#' and region similarity (species overlap).
+#' @return A data frame with one row (across all sites), including these columns: q, gamma diversity, alpha diverisity,
+#' beta diversity, MacArthur's homogeneity measure, local similarity (species overlap, similar to Sorensen),
+#' and region similarity (species overlap, similar to Jaccard).
 #' See Chao, Chiu and Jost 2014 Table 2 for more information.
 #' @references Chao, Anne, Chun-Huo Chiu, and Lou Jost. Unifying Species Diversity, Phylogenetic Diversity, Functional Diversity, and Related Similarity and Differentiation Measures Through Hill Numbers. Annual Review of Ecology, Evolution, and Systematics 45, no. 1 (2014): 297–324. <doi:10.1146/annurev-ecolsys-120213-091540>.
 #'
@@ -29,12 +30,16 @@
 #' hill_taxa_parti(comm = dummy$abun, q = 2)
 #' hill_taxa_parti(comm = dummy$abun, q = 3)
 #'
-hill_taxa_parti <- function(comm, q = 0, base = exp(1), rel_then_pool = TRUE, show.warning = TRUE) {
-    if (any(comm < 0))
-        stop("Negative value in comm data")
-    if (any(colSums(comm) == 0) & show.warning)
-        warning("Some species in comm data were not observed in any site,\n delete them...")
-    comm <- comm[, colSums(comm) != 0]
+hill_taxa_parti <- function(comm, q = 0, base = exp(1), rel_then_pool = TRUE,
+                            show_warning = TRUE, check_data = TRUE) {
+    if(check_data){
+        if (any(comm < 0))
+            stop("Negative value in comm data")
+        if (any(colSums(comm) == 0) & show_warning)
+            warning("Some species in comm data were not observed in any site,\n delete them...")
+    }
+
+    comm <- comm[, colSums(comm) != 0, drop = FALSE]
     N <- nrow(comm)
     S <- ncol(comm)
     comm <- as.matrix(comm)

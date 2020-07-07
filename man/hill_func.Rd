@@ -4,12 +4,21 @@
 \alias{hill_func}
 \title{Functional diversity through Hill Numbers}
 \usage{
-hill_func(comm, traits, traits_as_is = FALSE, q = 0, base = exp(1),
-  checkdata = TRUE, div_by_sp = FALSE, ord = c("podani", "metric"),
-  fdis = TRUE, stand_dij = FALSE)
+hill_func(
+  comm,
+  traits,
+  traits_as_is = FALSE,
+  q = 0,
+  base = exp(1),
+  check_data = TRUE,
+  div_by_sp = FALSE,
+  ord = c("podani", "metric"),
+  fdis = TRUE,
+  stand_dij = FALSE
+)
 }
 \arguments{
-\item{comm}{A data frame of vegtation data. Sites as rows, species as columns.}
+\item{comm}{A data frame of vegetation data. Sites as rows, species as columns.}
 
 \item{traits}{A data frame of species functional traits data. Species as rows, traits as columns.
 It can include both continuous and categorical data. It will be transformed into a distance
@@ -23,7 +32,7 @@ matrix. Otherwise, will use as is (i.e. traits is a symmetric distance matrix).}
 
 \item{base}{default is \code{exp(1)}, the base of log.}
 
-\item{checkdata}{whether to check data first? Default is \code{TRUE}.}
+\item{check_data}{whether to check data first? Default is \code{TRUE}.}
 
 \item{div_by_sp}{as FD calculated in this way will be highly correlated with taxonomic diversity,
 one potential simple way to correct this is to divide the results by the number of species.
@@ -38,7 +47,7 @@ Therefore, I set the default to be \code{FALSE}.}
 }
 \value{
 A matrix, with these information for each site: Q (Rao's Q); D_q (functional hill number,
- the effective number of equally abundant and functionally equally distince species);
+ the effective number of equally abundant and functionally equally distinct species);
  MD_q (mean functional diversity per species, the effective sum of pairwise distances between
  a fixed species and all other species); FD_q (total functional diversity, the effective total functional
  distance between species of the assemblage). See Chiu and Chao 2014 page 4 for more information.
