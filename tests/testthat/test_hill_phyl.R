@@ -32,10 +32,10 @@ test_that("phylogenetic similarity should be between 0 and 1; q = 2", {
 })
 
 test_that("pairwise similarity", {
-  a = hillR::hill_phylo_parti_pairwise(comm = dummy$abun, tree, q = 0)
+  a = hillR::hill_phylo_parti_pairwise(comm = dummy$abun, tree, q = 0, .progress = FALSE)
   expect_equal(nrow(a), choose(nrow(dummy$abun), 2))
 
-  a2 = hillR::hill_phylo_parti_pairwise(comm = dummy$abun, tree, q = 1)
+  a2 = hillR::hill_phylo_parti_pairwise(comm = dummy$abun, tree, q = 1, .progress = FALSE)
   expect_equal(nrow(a2), choose(nrow(dummy$abun), 2))
 })
 
@@ -47,6 +47,8 @@ test_that("when N = 2, hill_phylo_parti equals Sorensen", {
   toy.comm[2,] = c(0,0,1,1,1,1)
 
   toy.tree = ape::read.tree(text="(((sp1:1,sp2:1):5,(sp3:3,sp4:3):3):2,(sp5:7,sp6:7):1);")
+
+  skip_if_not_installed("betapart")
 
   toy.phylobetamulti = betapart::phylo.beta.multi(toy.comm, toy.tree, index.family = "sor")
   toy.phylobetamulti2 = betapart::phylo.beta.multi(toy.comm, toy.tree, index.family = "jac")
